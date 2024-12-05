@@ -47,7 +47,7 @@ public class Main
 		weeks2[6] = "일";
 		
 		for (int i = 0; i < weeks2.length; i++){
-		    System.out.println(weeks[i]);
+		    System.out.println(weeks2[i]);
 		}
 		
 	}
