@@ -39,7 +39,7 @@ def save_svg_resize(ratio):
 
 '''#######################################################################
 
-#  QSNO 101220
+#  QSNO 101220 71047
 
 #######################################################################'''
 
@@ -406,423 +406,367 @@ def intandrationalM112_Stem_07_001():
 #############################################################################################'''
 
 def intandrationalM112_Stem_07_002():
-	'''
-	1. 5가지 유형 ( 정수-정수, 소수-소수, 정수-소수, 분수-분수, 정수-분수 )
-	2. 결과가 가장 큰지를 묻는 선택형 문제
-	'''
-	###########################################################	
-	# 약분되지 않는 분수를 생성
-	###########################################################
+ 	
 	def generate_non_simplifiable_fraction():
+		"""약분되지 않는 분수를 생성하는 함수"""
 		while True:
 			numerator = random.randint(1, 9)
 			denominator = random.randint(2, 9)
-			if math.gcd(numerator, denominator) == 1: # 1이면 약분 불가능하므로 fraction으로 반환
+			if math.gcd(numerator, denominator) == 1:
 				return Fraction(numerator, denominator)
-
 	
-	###########################################################
-	# 정수 - 정수 계산 함수
-	###########################################################
-	def integer_integer_calculation():
-		while True:
-			num1 = random.randint(-10, 10)
-			num2 = random.randint(-10, 10)
-			if num1 != 0 and num2 != 0:  # 0이 아닌 정수만 선택
-				break
-		# 실제 뺄셈 결과
-		result = num1 - num2
-		result_str = str(result) # str로 반환
-		
-		# 첫 번째 숫자: 음수면 그대로, 양수면 부호없이
-		num1_str = str(num1) if num1 < 0 else str(abs(num1))
+	def format_with_sign(number, is_after_operation=False):
+		"""숫자를 수학 표기법에 맞게 문자열로 변환"""
+		if isinstance(number, (int, float)):
+			formatted = str(int(number)) if float(number).is_integer() else f"{number:.1f}"
+			
+			if number < 0:
+				if is_after_operation:
+					return f"({formatted})"  # 연산자 뒤 음수: (-2)
+				return formatted            # 첫 번째 음수: -2
+			return formatted               # 양수: 2
 
-		# 두 번째 숫자: 음수면 괄호, 양수면 부호 없이
-		num2_str = f"({num2})" if num2 < 0 else str(abs(num2))
+	def format_fraction(fraction, is_after_operation=False):
+		"""분수를 수학 표기법에 맞게 LaTeX 문자열로 변환"""
+		if fraction.numerator < 0:
+			if is_after_operation:
+				# 연산자 뒤에 오는 음수에는 괄호
+				return f"(-\\dfrac{{{abs(fraction.numerator)}}}{{{fraction.denominator}}})"
+			# 식 맨 앞이나, 연산자 앞의 움수인 경우 괄호 없이 e.g. -3/4 + ~~
+			return f"-\\dfrac{{{abs(fraction.numerator)}}}{{{fraction.denominator}}}"
+		# 분수가 양수인 경우에는 그냥 기본 분수 형태로 출력
+		return f"\\dfrac{{{fraction.numerator}}}{{{fraction.denominator}}}"
 
-		# 식 표현: 예) 3 -(-2) 형태
-		expression = f"{num1_str} - {num2_str}"
-
-		# 해설: 뺄셈을 덧셈으로 바꾸는 과정 및 최종결과
-		neg_num2_str = f"({-num2})" if -num2 < 0 else str(abs(-num2))
-		calculation = f"{num1_str} - {num2_str} = {num1_str} + {neg_num2_str} = {result_str}"
-
-		return f"\\({expression}\\)", result_str, f"\\({calculation}\\)"
-
-	###########################################################
-	# 소수 - 소수 계산 함수
-	###########################################################
-	def decimal_decimal_calculation():
-		''' num1- num2 결과를 구하여, 소수일 경우 소수 형태로, 정수면 정수 형태로 반환.'''
-		
-		while True:
-			num1 = round(random.uniform(-10, 10), 1)
-			num2 = round(random.uniform(-10, 10), 1)
-			# 소수점 한 자리이면서 0이 아닌 값 -> int(num* 10) % 10 != 0
-			if num1 != 0 and num2 != 0 and int(num1 * 10) % 10 != 0 and int(num2 * 10) % 10 != 0:
-				break
-		# num1 - num2를 실제로 계산
-		result = num1 + (-num2)
-
-		# 결과값을 문자열로 변환 (0, 정수, 소수 구분)
-		result_str = (
-			"0" if result == 0 
-			else f"{int(result)}" if result % 1 == 0
-			else f"{round(result, 1)}"
+	def format_calculation(num1, operator, num2, result):
+		"""계산 과정을 수학 표기법에 맞게 포맷팅"""
+		if operator == '-':
+			neg_num2 = -num2
+			return (
+				f"{format_with_sign(num1)} - {format_with_sign(num2, True)} = "
+				f"{format_with_sign(num1)} + {format_with_sign(neg_num2, True)} = "
+				f"{format_with_sign(result)}"
+			)
+		return (
+			f"{format_with_sign(num1)} {operator} {format_with_sign(num2, True)} = "
+			f"{format_with_sign(result)}"
 		)
-		# 첫 번째 숫자: 음수면 그대로, 양수면 부호없이
-		num1_str = str(num1) if num1 < 0 else str(abs(num1))
 
-		# 두 번째 숫자: 음수면 괄호, 양수면 부호 없이
-		num2_str = f"(-{abs(num2)})" if num2 < 0 else str(abs(num2))
-		
-		expression = f"{num1_str} - {num2_str}"
-		calculation = f"{num1_str} - {num2_str} = {result_str}"
-		return f"\\({expression}\\)", f"{result_str}" if result >= 0 else result_str, f"\\({calculation}\\)"
-	
-	###########################################################
-	# 랜덤 부호 분수 생성함수
-	###########################################################
 	def generate_random_sign_fraction():
-		'''-1 또는 +1을 곱하여 음수 혹은 양수 분수로 변환'''
+		"""랜덤한 부호를 가진 분수 생성"""
 		fraction = generate_non_simplifiable_fraction()
 		sign = random.choice([-1, 1])
 		return Fraction(sign * fraction.numerator, fraction.denominator)
 	
-	###########################################################
-	# 분수 - 분수 계산 함수
-	###########################################################
-	def fraction_fraction_calculation_with_proper_parentheses_corrected():
-		''' 분수 두 개를 랜덤 부호로 생성하고, 공통분모를 통해 결과 확인'''
-		fraction1 = generate_random_sign_fraction()
-		fraction2 = generate_random_sign_fraction()
-
-		# 첫 번째 분수 표현 함수
-		def format_fraction_with_sign(fraction):
-			# 음수 -> - 분수, 양수 -> 분수
-			if fraction.numerator < 0:
-				return f"-\\dfrac{{{abs(fraction.numerator)}}}{{{fraction.denominator}}}"
-			return f"\\dfrac{{{fraction.numerator}}}{{{fraction.denominator}}}"
+	
+	def integer_integer_calculation():
+		"""정수-정수 뺄셈 계산 함수"""
+		while True:
+			num1 = random.randint(-10, 10)
+			num2 = random.randint(-10, 10)
+			if num1 != 0 and num2 != 0 and abs(num1) != abs(num2):  # 0 제외
+				break
 		
-		def format_fraction_with_sign_answer2(fraction):
-			''' 분모가 1이면 정수로 표시, 그 외엔 분수로 표시'''
-			sign = "-" if fraction.numerator < 0 else ""
-			if fraction.denominator == 1:
-				return f"{sign}{abs(fraction.numerator)}"
-			else:
-				return f"{sign}\\dfrac{{{abs(fraction.numerator)}}}{{{fraction.denominator}}}"
-
-		# 분수1, 분수2를 문자열화    
-		fraction1_str = format_fraction_with_sign(fraction1)
-		fraction2_str = (f"({format_fraction_with_sign(fraction2)})"
-					   		if fraction2.numerator < 0
-					   		else format_fraction_with_sign(fraction2))
+		result = num1 - num2
 		
-		expression = f"{fraction1_str} - {fraction2_str}"
-		calculation = f"{fraction1_str} - {fraction2_str}"
-
-		neg_fraction2 = Fraction(-fraction2.numerator, fraction2.denominator)
-		calculation += f" = {fraction1_str} + {format_fraction_with_sign(neg_fraction2)}"
+		# LaTeX 식 구성
+		expression = f"{format_with_sign(num1)} - {format_with_sign(num2, True)}"
 		
-
-		# # 통분을 위한 공통분모 계산
-		# common_denominator = fraction1.denominator * fraction2.denominator
+		# 계산 과정 (뺄셈을 덧셈으로 변환)
+		calculation = format_calculation(num1, '-', num2, result)
 		
+		return (
+			f"\\({expression}\\)",
+			f"\\({format_with_sign(result)}\\)",
+			f"\\({calculation}\\)"
+		)
+
+	def decimal_decimal_calculation():
+		"""소수-소수 뺄셈 계산 함수"""
+		while True:
+			num1 = round(random.uniform(-10, 10), 1)
+			num2 = round(random.uniform(-10, 10), 1)
+			# 0이 아니고 소수점 첫째자리가 0이 아닌 값
+			if (num1 != 0 and num2 != 0 and 
+				int(num1 * 10) % 10 != 0 and 
+				int(num2 * 10) % 10 != 0):
+				break
+		
+		result = num1 - num2
+		
+		# LaTeX 식 구성
+		expression = f"{format_with_sign(num1)} - {format_with_sign(num2, True)}"
+		
+		# 계산 과정 (뺄셈을 덧셈으로 변환)
+		calculation = format_calculation(num1, '-', num2, result)
+		
+		return (
+			f"\\({expression}\\)",
+			f"\\({format_with_sign(result)}\\)",
+			f"\\({calculation}\\)"
+		)
+
+	def integer_decimal_calculation():
+		"""정수-소수 또는 소수-정수 뺄셈 계산 함수"""
+		while True:
+			num_int = random.randint(-10, 10)
+			num_dec = round(random.uniform(-10, 10), 1)
+			# 0이 아니고 소수점 첫째자리가 0이 아닌 수 선택
+			if num_int != 0 and num_dec != 0 and int(num_dec * 10) % 10 != 0:
+				break
+		
+		# 정수-소수 또는 소수-정수 순서 랜덤 선택
+		if random.choice([True, False]):
+			num1, num2 = num_int, num_dec
+		else:
+			num1, num2 = num_dec, num_int
+		
+		result = num1 - num2
+		
+		# LaTeX 식 구성
+		expression = f"{format_with_sign(num1)} - {format_with_sign(num2, True)}"
+		
+		# 계산 과정 (뺄셈을 덧셈으로 변환)
+		calculation = format_calculation(num1, '-', num2, result)
+		
+		return (
+			f"\\({expression}\\)",
+			f"\\({format_with_sign(result)}\\)",
+			f"\\({calculation}\\)"
+		)
+	
+	def fraction_fraction_calculation():
+		"""분수-분수 계산 함수"""
+		# 두 개의 랜덤 부호 분수 생성
+		while True:
+			fraction1 = generate_random_sign_fraction()
+			fraction2 = generate_random_sign_fraction()
+			if abs(fraction1.numerator) != abs(fraction2.numerator) or abs(fraction1.denominator) != abs(fraction2.denominator):
+				break
+		# LaTeX 식 구성
+		expression = f"{format_fraction(fraction1)} - {format_fraction(fraction2, True)}"		
+				
+		# 통분 과정
 		if fraction1.denominator == fraction2.denominator:
-			common_denominator = fraction1.denominator
+			common_denominator = fraction1.denominator  # 25.2.8일 1시 50분 수정 중. 통분 과정 추가 예정
 			fraction1_numerator = fraction1.numerator
 			fraction2_numerator = -fraction2.numerator
 		else:
 			common_denominator = fraction1.denominator * fraction2.denominator
 			fraction1_numerator = fraction1.numerator * fraction2.denominator
-			fraction2_numerator = -fraction2.numerator * fraction1.denominator 
-
-		# 통분 - 부호 유지하면서 분자 계산
-
-		if fraction1_numerator < 0:
-			fraction1_part = f"-\\dfrac{{{abs(fraction1_numerator)}}}{{{common_denominator}}}"
-		else:
-			fraction1_part = f"\\dfrac{{{fraction1_numerator}}}{{{common_denominator}}}"
-		if fraction2_numerator < 0:
-			fraction2_part = f"-\\dfrac{{{abs(fraction2_numerator)}}}{{{common_denominator}}}"
-		else:
-			fraction2_part = f"\\dfrac{{{fraction2_numerator}}}{{{common_denominator}}}"
-		calculation += f" = {fraction1_part} + {fraction2_part}"
-
-		fraction1_numerator = int(fraction1.numerator * fraction2.denominator)
-		fraction2_numerator = int(fraction2.numerator * fraction1.denominator)
-
-		# # 두 번째 분수의 부호를 바꾼 분수 생성 (뺄셈을 덧셈으로 변환)
-		# neg_fraction2 = Fraction(-fraction2.numerator, fraction2.denominator)
+			fraction2_numerator = -fraction2.numerator * fraction1.denominator
 		
-		# neg_fraction2_str = (f"({format_fraction_with_sign(neg_fraction2)})"
-		# 			   		if neg_fraction2.numerator < 0
-		# 					else format_fraction_with_sign(neg_fraction2))
 
-		# 계산 과정 시작
-		calculation += f" = {fraction1_part} + {fraction2_part}"
-
-		# 결과 계산
-		result_numerator = fraction1_numerator - fraction2_numerator
-		result = Fraction(result_numerator, common_denominator)
-		result_str = format_fraction_with_sign_answer2(result)
-
-		# # 통분된 형태로 계산 과정 표시
-		# if fraction2.numerator < 0:
-		# 	calculation = f"{fraction1_str} - {fraction2_str} = {fraction1_str} + {neg_fraction2_str}"
-		# 	if fraction1.numerator < 0:
-		# 		calculation += f" = -\\dfrac{{{abs(fraction1_numerator)}}}{{{common_denominator}}} + \\dfrac{{{fraction2_numerator}}}{{{common_denominator}}}"
-		# 	else:
-		# 		calculation += f" = \\dfrac{{{fraction1_numerator}}}{{{common_denominator}}} + \\dfrac{{{fraction2_numerator}}}{{{common_denominator}}}"
-		# else:
-		# 	calculation += f" = \\dfrac{{{fraction1_numerator}}}{{{common_denominator}}} - \\dfrac{{{abs(fraction2_numerator)}}}{{{common_denominator}}}"
-
-		# 최종 결과
-		result_numerator = fraction1_numerator + fraction2_numerator
-		result = Fraction(result_numerator, common_denominator)
-		result_str = format_fraction_with_sign_answer2(result)
-		# result_str = format_fraction_with_sign_answer2(result)
-		answer = result_str
-		calculation += f" = {result_str}"
-
-		return f"\\({expression}\\)", f"\\({answer}\\)", f"\\({calculation}\\)"
-	
-	###########################################################
-	
-	#정수 - 소수(소수-정수) 계산
-	
-	###########################################################
-	def integer_decimal_calculation_modified():
-		''' 정수, 소수 둘 다 0제외, 소수점 첫째자리 !=0 '''
-
-		expression = ""
-		calculation = ""
-		result = 0
-
-		while True:
-			num1 = random.randint(-10, 10)
-			num2 = round(random.uniform(-10, 10), 1)
-			if num1 != 0 and num2 != 0 and int(num2 * 10) % 10 != 0:  # Ensure first decimal place isn't 0
-				break
-		
-		if random.choice([True, False]):
-			# Integer - Decimal
-			num1_str = str(num1)
-			num2_str = f"({str(num2)})" if num2 < 0 else str(num2)
+		neg_fraction2 = Fraction(-fraction2.numerator, fraction2.denominator)
+		calculation = (
+			f"{format_fraction(fraction1)} - {format_fraction(fraction2, True)} = "
+			f"{format_fraction(fraction1)} + {format_fraction(neg_fraction2, True)} ="
+		)
 			
-			expression = f"{num1_str} - {num2_str}"
-			neg_num2_str = f"({str(-num2)})" if num2 > 0 else str(-num2)
-			calculation = f"{num1_str} - {num2_str} = {num1_str} + {neg_num2_str}"
-			result = num1 + (-num2)
+		
+		# 분수 - 분수 계산의 경우
+		if fraction1.numerator > 0 and fraction2.numerator > 0:
+			# 양수 - 양수
+			result_numerator = abs(fraction1.numerator*fraction2.denominator) - abs(fraction2.numerator*fraction1.denominator)
+			calculation = (
+				f"{expression} = "
+				f"\\dfrac{{{abs(fraction1.numerator*fraction2.denominator)}}}{{{fraction1.denominator*fraction2.denominator}}} - "
+				f"\\dfrac{{{abs(fraction2.numerator*fraction1.denominator)}}}{{{fraction2.denominator*fraction1.denominator}}} = "
+				f"{'-' if result_numerator < 0 else ''}\\dfrac{{{abs(result_numerator)}}}{{{common_denominator}}}"
+			)
+
+
+		elif fraction2.numerator < 0:
+			# 양수 - (-음수)
+			neg_fraction2 = Fraction(abs(fraction2.numerator), fraction2.denominator)
+
+			
+			calculation += (
+
+				f"\\dfrac{{{abs(fraction1.numerator*fraction2.denominator)}}}{{{fraction1.denominator*fraction2.denominator}}} + "
+				f"\\dfrac{{{abs(fraction2.numerator*fraction1.denominator)}}}{{{fraction2.denominator*fraction1.denominator}}} = "
+				f"\\dfrac{{{abs(fraction1.numerator*fraction2.denominator) + abs(fraction2.numerator*fraction1.denominator)}}}{{{common_denominator}}}"	
+
+			)
+
+			
+
+
+		elif fraction1.numerator < 0 and fraction2.numerator < 0:
+			# 음수 - (-)음수
+			result_numerator = fraction1.numerator*fraction2.denominator - fraction2.numerator*fraction1.denominator
+			calculation += (
+				# f"{expression} = "
+				f"{format_fraction(fraction1)} - {format_fraction(fraction2, True)} = 음-(-)음2"
+				f"{format_fraction(fraction1)} + {format_fraction(neg_fraction2, True)} = 음-(-)음2"
+				# f"{'-' if fraction1_numerator < 0 else ''}\\dfrac{{{abs(fraction1_numerator)}}}{{{common_denominator}}}"
+    			# f"{'-' if fraction2_numerator < 0 else ''}\\dfrac{{{abs(fraction2_numerator)}}}{{{common_denominator}}} = "
+    			# 최종 결과
+				f"{'-' if (fraction1_numerator +fraction2_numerator) < 0 else ''}\\dfrac{{{abs(fraction1_numerator + fraction2_numerator)}}}{{{common_denominator}}}"
+			)
 		else:
-			# Decimal - Integer
-			num2_str = str(num2)
-			num1_str = f"({str(num1)})" if num1 < 0 else str(num1)
+			# 음수 + (-음수
+			calculation += (
+				f"{'-' if fraction1_numerator < 0 else ''}\\dfrac{{{abs(fraction1_numerator)}}}{{{common_denominator}}}"
+				f"{'+' if fraction2_numerator < 0 else ''}(-\\dfrac{{{abs(fraction2_numerator)}}}{{{common_denominator}}}) = "
+				f"{'-' if (fraction1_numerator +fraction2_numerator) < 0 else ''}\\dfrac{{{abs(fraction1_numerator + fraction2_numerator)}}}{{{common_denominator}}}"
+			)
 
-			expression = f"{num2_str} - {num1_str}"
-			neg_num1_str = f"({str(-num1)})" if num1 > 0 else str(-num1)
-			calculation = f"{num2_str} - {num1_str} = {num2_str} + {neg_num1_str}"
-			result = num2 + (-num1)
 
-		result_str = "0" if result == 0 else f"{round(result, 1)}" if result >= 0 else f"{round(result, 1)}"
-		calculation += f" = {result_str}" # Remove '+' for positive result
+		result = Fraction(fraction1_numerator + fraction2_numerator, common_denominator)
+		simplified_result = result.limit_denominator()
+
+		if result != simplified_result:
+			calculation += f" = {format_fraction(simplified_result)}"
+			final_result = simplified_result
+		else:
+			final_result = result
+
 		
-		return f"\\({expression}\\)", result_str, f"\\({calculation}\\)"
-	
-	
-	###########################################################
-	# 정수 - 분수(분수 - 정수) 계산 함수 (순서 랜덤화)
-	###########################################################
-	def integer_fraction_calculation_with_multiplication():
-		'''분모를 맞춰서 계산, 최종 결과 약분 여부 확인'''
-		
+		return (
+			f"\\({expression}\\)",
+			f"\\({format_fraction(final_result)}\\)",
+			f"\\({calculation}\\)"
+		)
+
+	def integer_fraction_calculation():
+		"""정수-분수 또는 분수-정수 뺄셈 계산 함수"""
+		# 0이 아닌 정수 생성
 		while True:
-			num1 = random.randint(-10, 10)
-			if num1 != 0:  # Exclude 0 for both integers
+			num = random.randint(-10, 10)
+			if num != 0:
 				break
-		fraction = generate_non_simplifiable_fraction()
-
 		
-		def format_fraction_with_sign(fraction):
-			sign = "-" if fraction.numerator < 0 else ""
-			return f"{sign}\\dfrac{{{abs(fraction.numerator)}}}{{{fraction.denominator}}}"
-
-		# Format the fraction string
-		fraction_str = (f"(-\\dfrac{{{abs(fraction.numerator)}}}{{{fraction.denominator}}})" 
-                   if fraction.numerator < 0 
-                   else f"\\dfrac{{{fraction.numerator}}}{{{fraction.denominator}}}") # 보인 변경(2024/12/06) - {format_fraction_with_sign} 사용
-
-		if random.choice([True, False]):
-			# --------------
+		# 약분되지 않는 분수 생성
+		fraction = generate_random_sign_fraction()
+		
+		# 정수-분수 또는 분수-정수 순서 랜덤 결정
+		is_integer_first = random.choice([True, False])
+		
+		if is_integer_first:
 			# 정수 - 분수
-			# --------------
-			if num1 < 0:
-				num1_str = str(num1)
+			expression = f"{format_with_sign(num)} - {format_fraction(fraction, True)}"
+			
+			# 정수를 분수로 변환
+			num_as_fraction = Fraction(num * fraction.denominator, fraction.denominator)
+			# neg_fraction = Fraction(-fraction.numerator, fraction.denominator)
+			
+			if fraction.numerator < 0:
+				neg_fraction = Fraction(abs(fraction.numerator), fraction.denominator)
+				operation_symbol = "+"
+				first_step = f"{format_fraction(num_as_fraction)} + {format_fraction(neg_fraction)}"
+				# first_step = f"{format_fraction(num_as_fraction)} + \\dfrac{{{abs(fraction.numerator)}}}{{{fraction.denominator}}}"
 			else:
-				num1_str = str(num1)
+				neg_fraction = Fraction(-fraction.numerator, fraction.denominator)
+				operation_symbol = "-"
+				first_step = f"{format_fraction(num_as_fraction)} + ({format_fraction(neg_fraction)})"
+				# first_step = f"{format_fraction(num_as_fraction)} - \\dfrac{{{abs(fraction.numerator)}}}{{{fraction.denominator}}}"
+	
+
+			calculation = (
+				f"{format_with_sign(num)} - {format_fraction(fraction, True)} = "
+				f"{first_step} = "
+				f"{'-' if num < 0 else ''}\\dfrac{{{abs(num * fraction.denominator)}}}{{{fraction.denominator}}} {operation_symbol} "
+				f"\\dfrac{{{abs(fraction.numerator)}}}{{{fraction.denominator}}} = "
+				f"{format_fraction(num_as_fraction + neg_fraction)}"
+			)
 			
-			fraction_str = (f"(-\\dfrac{{{abs(fraction.numerator)}}}{{{fraction.denominator}}})"
-				           if fraction.numerator < 0 
-				           else f"\\dfrac{{{fraction.numerator}}}{{{fraction.denominator}}}")
-
-			expression = f"{num1_str} - {fraction_str}"
-
-			# 분수를 음수로
-			neg_fraction = Fraction(-fraction.numerator, fraction.denominator)
-			neg_fraction_str = (f"(-\\dfrac{{{abs(neg_fraction.numerator)}}}{{{neg_fraction.denominator}}})" 
-                           if neg_fraction.numerator < 0 
-                           else f"\\dfrac{{{neg_fraction.numerator}}}{{{neg_fraction.denominator}}}")
-			
-			sign_change = f"{num1_str} + {neg_fraction_str}"
-
-			# 공통분모 작업용으로 정수를 Fraction 객체로 변환
-			num1_as_fraction = Fraction(num1 * fraction.denominator, fraction.denominator)
-			
-			denominator = fraction.denominator
-			num1_expanded = abs(num1 * denominator)
-			#num1_as_fraction_str = format_fraction_with_sign(num1_as_fraction)			
-			fraction_addition = f"{'-' if num1 < 0 else ''}\\dfrac{{{num1_expanded}}}{{{denominator}}} - \\dfrac{{{abs(fraction.numerator)}}}{{{fraction.denominator}}}"
-
-			result = num1_as_fraction + neg_fraction
-		
+			result = num_as_fraction + neg_fraction
 		else:
-			# --------------
 			# 분수 - 정수
-			# --------------
-			if num1 < 0:
-				num1_str = f"({str(num1)})"
+			expression = f"{format_fraction(fraction)} - {format_with_sign(num, True)}"
 			
-			else:
-				num1_str = str(num1)
-
+			# 정수를 분수로 변환
+			num_as_fraction = Fraction(num * fraction.denominator, fraction.denominator)
+			neg_num_as_fraction = Fraction(-num * fraction.denominator, fraction.denominator)
 			
-			fraction_str = format_fraction_with_sign(fraction)
-			expression = f"{fraction_str} - {num1_str}"
-
-
-
-			# num1_str = f"-\\dfrac{{{abs(num1)}}}{1}" if num1 < 0 else f"\\dfrac{{{num1}}}{1}"
-			# expression = f"{fraction_str} - {num1_str}"
-
-			neg_num1 = num1
-			neg_num1_str = f"(-\\dfrac{{{abs(num1)}}}{1})" if num1 > 0 else f"\\dfrac{{{abs(num1)}}}{1}"
-			sign_change = f"{fraction_str} + {neg_num1_str}"
-
-			neg_num1_as_fraction = Fraction(neg_num1 * fraction.denominator, fraction.denominator)
-			denominator = fraction.denominator
-			#neg_num1_as_fraction_str = format_fraction_with_sign(neg_num1_as_fraction)
-			num1_expanded = abs(num1 * denominator)
+			if num < 0: # 뒤의 수가 음수인 경우
+				calculation = (
+					f"{format_fraction(fraction)} - ({format_fraction(num_as_fraction)}) = "
+					f"{format_fraction(fraction)} + {format_fraction(neg_num_as_fraction)} = "
+					f"{'-' if fraction.numerator * num_as_fraction.denominator < 0 else ''}\\dfrac{{{abs(fraction.numerator * num_as_fraction.denominator)}}}{{{fraction.denominator * num_as_fraction.denominator}}} + "
+					f"{'-' if neg_num_as_fraction.numerator * fraction.denominator < 0 else ''}\\dfrac{{{abs(neg_num_as_fraction.numerator * fraction.denominator)}}}{{{fraction.denominator * num_as_fraction.denominator}}} = "
+					f"{format_fraction(fraction + neg_num_as_fraction)}"
+				)
+			else: # 뒤의 수가 양수인 경우
+				calculation = (
+					f"{format_fraction(fraction)} - {format_fraction(num_as_fraction)} = "
+					f"{format_fraction(fraction)} + ({format_fraction(neg_num_as_fraction)}) = "
+					f"{'-' if fraction.numerator * num_as_fraction.denominator < 0 else ''}\\dfrac{{{abs(fraction.numerator * num_as_fraction.denominator)}}}{{{fraction.denominator * num_as_fraction.denominator}}} + "
+					f"{'-' if neg_num_as_fraction.numerator * fraction.denominator < 0 else ''}\\dfrac{{{abs(neg_num_as_fraction.numerator * fraction.denominator)}}}{{{fraction.denominator * num_as_fraction.denominator}}} = "
+					f"{format_fraction(fraction + neg_num_as_fraction)}"
+				)
 			
-			# simple_num1_str = f"\\dfrac{{{abs(num1_expanded)}}}{{{denominator}}}"
-			# fraction_expanded = fraction.numerator * 1
-			fraction_addition = f"{fraction_str} - \\dfrac{{{num1_expanded}}}{{{denominator}}}"
-
-			result = fraction + neg_num1_as_fraction
-
+			
+			result = fraction + neg_num_as_fraction
+		
 		# 결과 약분
 		simplified_result = result.limit_denominator()
-		
-		
-		result_str = format_fraction_with_sign(result)
-		
-		# 약분 가능하면 약분된 결과로 표시
 		if result != simplified_result:
-			simplified_result_str = format_fraction_with_sign(simplified_result)
-			answer = simplified_result_str
-		else:
-			answer = result_str
+			calculation += f" = {format_fraction(simplified_result)}"
+			result = simplified_result
+		
+		return (
+			f"\\({expression}\\)",
+			f"\\({format_fraction(result)}\\)",
+			f"\\({calculation}\\)"
+		)
 
-		calculation = f"{expression} = {sign_change} = {fraction_addition} = {result_str}"
-		calculation = f"{expression} = {fraction_addition} = {result_str}"
 
-		return f"\\({expression}\\)", f"\\({answer}\\)", f"\\({calculation}\\)"
-	
-	###########################################################
-	
-	# 결과 문자열을 float으로 파싱하는 함수
-	
-	###########################################################	
-	def parse_fraction(fraction_str):
-		""" 
-		
-		fraction_str이 '\\dfrac{a}{b}' 형태면 a/b로 나누어 float 변환
-		단순 숫자도 float 변환 시도
-		실패시 0 반환(예외처리)
-		
-		"""
-		
-		try:
-			fraction_str = fraction_str.replace('\\(', '').replace('\\)', '')
-			
-			# \\dfrac{a}{b} 형태인지 확인
-			if '\\dfrac' in fraction_str:
-				# 1. 먼저 => dfrac {' <= 2. 제거 후 => '}' <= 3. 제거 
-				fraction_str = fraction_str.replace('\\dfrac{', '').replace('}', '')
-				# numerator, denominator 분리
-				numerator, denominator = fraction_str.split("{")
-				return float(numerator) / float(denominator)
-			
-			# 만약 단순 (1), (3)..etc 이런 형태일 수도 있으니 괄호 제거
-			fraction_str = fraction_str.replace('(', '').replace(')', '')
-			return float(fraction_str)
-		except ValueError:
-			return 0
-		
-	''' 계산 문제를 생성하여 5개 옵션으로 만든 뒤, "결과가 가장 큰 것을 찾는 문제 구성'''
-	expr1, res1, calc1 = integer_integer_calculation()
-	expr2, res2, calc2 = decimal_decimal_calculation()
-	expr3, res3, calc3 = integer_decimal_calculation_modified()
-	expr4, res4, calc4 = fraction_fraction_calculation_with_proper_parentheses_corrected()
-	expr5, res5, calc5 = integer_fraction_calculation_with_multiplication()
-
-	# 5가지 옵션을 리스트에 담고 셔플
-	options = [
-		(expr1, res1, calc1),
-		(expr2, res2, calc2),
-		(expr3, res3, calc3),
-		(expr4, res4, calc4),
-		(expr5, res5, calc5)
+	"""5가지 유형의 뺄셈 계산 문제를 생성하고, 결과가 가장 큰 것을 찾는 선택형 문제 생성"""
+	# 5가지 유형의 계산 수행
+	calculations = [
+		integer_integer_calculation(),      # 정수-정수
+		decimal_decimal_calculation(),      # 소수-소수
+		integer_decimal_calculation(),      # 정수-소수
+		fraction_fraction_calculation(),    # 분수-분수
+		integer_fraction_calculation()      # 정수-분수
 	]
-
 	
-	random.shuffle(options)
-
+	# 결과를 섞어서 보기 생성
+	random.shuffle(calculations)
 	
-	labels = ['①', '②', '③', '④', '⑤']
+	# 문제 생성
 	stem = "다음 중 계산 결과가 가장 큰 것은?\n"
-	for label, option in zip(labels, options):
-		stem += f"{label} {option[0]}\n"
+	labels = ['①', '②', '③', '④', '⑤']
 	
-	#######################################
+	for label, (expr, _, _) in zip(labels, calculations):
+		stem += f"{label} {expr}\n"
 	
-	#--각 옵션의 결과를 float으로 파싱하여 비교--#
-	
-	#######################################
+	# 각 계산 결과를 숫자로 변환하여 비교
 	results = []
-	for option in options:
-		if 'frac' in option[1]:
-			results.append(parse_fraction(option[1]))
+	for _, result_str, _ in calculations:
+		clean_str = (result_str.replace('\\(', '')
+							  .replace('\\)', '')
+							  .replace('\\dfrac', '')
+							  .replace('{', '')
+							  .replace('}', '')
+							  .replace('\\', '')
+							  .strip())
+		
+		# 분수 형태인 경우
+		if '/' in clean_str:
+			num, denom = map(int, clean_str.split('/'))
+			results.append(num / denom)
 		else:
-			results.append(parse_fraction(option[1]))
+			# 정수 또는 소수인 경우
+			results.append(float(clean_str))
 	
-
-
-	# 가장 큰 값 찾기
-	max_value = max(results)
-	max_index = results.index(max_value)
-
-	# Answer and explanation
+	# 가장 큰 값의 인덱스 찾기
+	max_index = results.index(max(results))
+	
+	# 정답 및 해설 생성
 	answer = f"(정답) {labels[max_index]}\n"
+	
 	comment = "(해설)\n"
-	for label, option in zip(labels, options):
-		comment += f"{label} {option[2]}\n"
+	for label, (_, _, calc) in zip(labels, calculations):
+		comment += f"{label} {calc}\n"
 	comment += f"따라서 계산 결과가 가장 큰 것은 {labels[max_index]}이다.\n"
-
+	
 	return stem, answer, comment
 
 '''#############################################################################
 
-# QSNO 101222 71049
+# QSNO 101222 71049 #회사에서 수정
 
 #############################################################################'''
 
