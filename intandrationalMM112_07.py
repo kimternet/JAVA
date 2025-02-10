@@ -2143,80 +2143,85 @@ def intandrationalM112_Stem_07_007():
 
 
 def intandrationalM112_Stem_07_008():
-	def generate_random_number(existing_numbers):
-		while True:
-			number_type = random.choice(['integer', 'decimal', 'fraction'])
+    def generate_random_number(existing_numbers):
+        while True:
+            number_type = random.choice(['integer', 'decimal', 'fraction'])
 
-			if number_type == 'integer':
-				num = random.randint(-10, 10)
-				if num != 0 and num not in existing_numbers:  # Exclude 0 for both integers
-					return num
+            if number_type == 'integer':
+                num = random.randint(-10, 10)
+                if num != 0 and num not in existing_numbers:  # Exclude 0 for both integers
+                    return num
 
-			elif number_type == 'decimal':
-				num = round(random.uniform(-10, 10), 1)
-				if num % 1 != 0 and num not in existing_numbers:  # Ensure no decimals like 0.0, 1.0
-					return num
+            elif number_type == 'decimal':
+                num = round(random.uniform(-10, 10), 1)
+                if num % 1 != 0 and num not in existing_numbers:  # Ensure no decimals like 0.0, 1.0
+                    return num
 
-			elif number_type == 'fraction':
-				while True:
-					numerator = random.randint(1, 9)
-					denominator = random.randint(2, 9)
-					if math.gcd(numerator, denominator) == 1:  # Ensure no simplifiable fractions
-						fraction_num = Fraction(numerator, denominator) * random.choice([1, -1])
-						if fraction_num not in existing_numbers and fraction_num != Fraction(1):
-							return fraction_num
+            elif number_type == 'fraction':
+                while True:
+                    numerator = random.randint(1, 9)
+                    denominator = random.randint(2, 9)
+                    if math.gcd(numerator, denominator) == 1:  # Ensure no simplifiable fractions
+                        fraction_num = Fraction(numerator, denominator) * random.choice([1, -1])
+                        if fraction_num not in existing_numbers and fraction_num != Fraction(1):
+                            return fraction_num
 
-	# Generate 5 random numbers
-	generated_numbers = []
-	while len(generated_numbers) < 5:
-		new_number = generate_random_number(generated_numbers)
-		generated_numbers.append(new_number)
+    def format_inequality_chain(text):
+        """부등식 체인에서 < > 기호를 LaTeX 명령어로 변환"""
+        return text.replace('>', '\\gt').replace('<', '\\lt')
 
-	# Compare absolute values and sort the numbers
-	sorted_numbers_list = sorted(generated_numbers, key=lambda x: abs(x))
+    # Generate 5 random numbers
+    generated_numbers = []
+    while len(generated_numbers) < 5:
+        new_number = generate_random_number(generated_numbers)
+        generated_numbers.append(new_number)
 
-	def format_number(num):
-		if isinstance(num, Fraction):
-			return f"\\frac{{{abs(num.numerator)}}}{{{num.denominator}}}" if num >= 0 else f"-\\frac{{{abs(num.numerator)}}}{{{num.denominator}}}"
-		else:
-			return f"{abs(num)}" if num >= 0 else f"-{abs(num)}"
+    # Compare absolute values and sort the numbers
+    sorted_numbers_list = sorted(generated_numbers, key=lambda x: abs(x))
 
-	# List the absolute values for the explanation
-	absolute_values_list = " < ".join([f"|{format_number(num)}|" for num in sorted_numbers_list])
+    def format_number(num):
+        if isinstance(num, Fraction):
+            return f"\\frac{{{abs(num.numerator)}}}{{{num.denominator}}}" if num >= 0 else f"-\\frac{{{abs(num.numerator)}}}{{{num.denominator}}}"
+        else:
+            return f"{abs(num)}" if num >= 0 else f"-{abs(num)}"
 
-	# Select the largest and smallest numbers based on absolute values
-	min_val = sorted_numbers_list[0]  # Smallest based on absolute value
-	max_val = sorted_numbers_list[-1]  # Largest based on absolute value
+    # List the absolute values for the explanation
+    absolute_values_list = " < ".join([f"|{format_number(num)}|" for num in sorted_numbers_list])
 
-	# Calculate B - A
-	result = max_val - min_val
+    # Select the largest and smallest numbers based on absolute values
+    min_val = sorted_numbers_list[0]  # Smallest based on absolute value
+    max_val = sorted_numbers_list[-1]  # Largest based on absolute value
 
-	def format_result(result):
-		if isinstance(result, Fraction):
-			return f"\\frac{{{result.numerator}}}{{{result.denominator}}}"
-		elif isinstance(result, float):
-			return f"{round(result, 1)}"
-		else:
-			return f"{int(result)}"
+    # Calculate B - A
+    result = max_val - min_val
 
-	# Prepare the problem text and explanation
-	stem = f"다음 수 중에서 절댓값이 가장 큰 수를 \\(A\\), 절댓값이 가장 작은 수를 \\(B\\)라 할 때, \\(B - A\\)의 값을 구하시오.\n"
-	numbers_list = ", ".join([f"\\({format_number(num)}\\)" for num in generated_numbers])
-	# box_stem = make_box_stem(numbers_list, type = 1, mark_title= True, col_count=7)
-	box_stem = make_box_stem(numbers_list, type = 1, mark_title= True)
-	stem += insert_html_code(box_stem)
+    def format_result(result):
+        if isinstance(result, Fraction):
+            return f"\\frac{{{result.numerator}}}{{{result.denominator}}}"
+        elif isinstance(result, float):
+            return f"{round(result, 1)}"
+        else:
+            return f"{int(result)}"
 
-	stem += f"\n"
+    # Prepare the problem text and explanation
+    stem = f"다음 수 중에서 절댓값이 가장 큰 수를 \\(A\\), 절댓값이 가장 작은 수를 \\(B\\)라 할 때, \\(B - A\\)의 값을 구하시오.\n"
+    numbers_list = [f"\\({format_number(num)}\\)" for num in generated_numbers]
+    box_stem = make_box_stem(numbers_list, type = 1, mark_title= True)
+    stem += insert_html_code(box_stem)
+    stem += f"\n"
 
-	# The final result and detailed explanation
-	answer = f"(정답) \\({format_result(result)}\\)\n"
-	
-	comment = f"(해설) \\(|{format_number(max_val)}| > {absolute_values_list} > |{format_number(min_val)}|\\) 이므로\nA = {format_number(max_val)}, B = {format_number(min_val)}\n따라서 \\(B - A = {format_number(min_val)} - {format_number(max_val)} = {format_result(result)}\\)\n"
+    # The final result and detailed explanation
+    answer = f"(정답) \\({format_result(result)}\\)\n"
+    
+    # comment 부분 수정
+    inequality_chain = f"|{format_number(max_val)}| > {absolute_values_list} > |{format_number(min_val)}|"
+    safe_inequality_chain = format_inequality_chain(inequality_chain)
+    
+    comment = f"(해설) \\({safe_inequality_chain}\\) 이므로\n"
+    comment += f"A = {format_number(max_val)}, B = {format_number(min_val)}\n"
+    comment += f"따라서 \\(B - A = {format_number(min_val)} - {format_number(max_val)} = {format_result(result)}\\)\n"
 
-	# answer = f"(정답) answer"
-	# comment = f"(해설) comment"
-
-	return stem, answer, comment
+    return stem, answer, comment
 
 
 # QSNO 101228
