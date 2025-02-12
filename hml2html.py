@@ -1,6 +1,5 @@
 #-*- coding: utf-8 -*-
 
-from venv import logger
 import latex2mathml.converter
 import hml_equation_parser as hp
 from xml.etree.ElementTree import fromstring, Element, ElementTree
@@ -16,53 +15,52 @@ def convertSpace2nbsp(string: str) -> str:
     return string.replace(' ', r'&nbsp;')
 
 def parseHmlSample(xmlText: str) -> ElementTree:
-   try:
-       lines = xmlText.split('\n')
-       # 문제 지점 주변 10줄 출력
-       logger.info("XML content around error:")
-       for i in range(max(0, 312-2), min(len(lines), 312+3)):
-           logger.info(f"{i+1}: {lines[i]}")
-       
-       hwpml = fromstring(xmlText)
-       body = hwpml.find("BODY")
-       section = body.find("SECTION")
-       docRoot = Element("HmlParser")
-       paragraphs = section.findall("P")
+    hwpml = fromstring(xmlText)
+    body = hwpml.find("BODY")
+    section = body.find("SECTION")
 
-       for paragraph in paragraphs:
-           paragraphNode = Element("Paragraph")
-           
-           if paragraph.get("PageBreak") == "true":
-               paragraphNode.attrib["NewPage"] = "true"
-           else:
-               paragraphNode.attrib["NewPage"] = "false"
+    docRoot = Element("HmlParser")
 
-           text = paragraph.find("TEXT")
-           if text is not None:
-               for child in text.getchildren():
-                   if child.tag == "CHAR":
-                       value = child.text
-                       if value is not None:
-                           leafNode = Element("Char")
-                           leafNode.text = value
-                           paragraphNode.append(leafNode)
-                   elif child.tag == "EQUATION":
-                       script = child.find("SCRIPT")
-                       value = script.text
-                       leafNode = Element("Equation")
-                       leafNode.text = value
-                       paragraphNode.append(leafNode)
-                   else:
-                       pass
+    paragraphs = section.findall("P")
 
-               docRoot.append(paragraphNode)
+    for paragraph in paragraphs:
 
-       return ElementTree(docRoot)
-       
-   except Exception as e:
-       logger.error(f"XML parsing error at line 313: {str(e)}")
-       logger.error(f"XML content that caused error: {lines[312]}")
-       raise
+        paragraphNode = Element("Paragraph")
+
+        if paragraph.get("PageBreak") == "true":
+            paragraphNode.attrib["NewPage"] = "true"
+        else:
+            paragraphNode.attrib["NewPage"] = "false"
+
+        # I suupposed that there is one text tag or no text tag in one paragraph.
+        # If there are more than one text, you must use `findall` method to find all text tags.
+        
+        text = paragraph.find("TEXT")
+        if text is not None:
+            for child in text.getchildren():
+                if child.tag == "CHAR":
+                    value = child.text
+
+                    if value is not None:  # For EQUATION tag, there is a </CHAR> tag and it has no information.
+                        leafNode = Element("Char")
+                        leafNode.text = value
+                        paragraphNode.append(leafNode)
+
+                elif child.tag == "EQUATION":
+                    script = child.find("SCRIPT")
+                    value = script.text
+                    
+                    leafNode = Element("Equation")
+                    leafNode.text = value
+                    paragraphNode.append(leafNode)
+                    
+                else:
+                    #print("not supported tag: {}".format(child.tag))
+                    pass
+
+            docRoot.append(paragraphNode)
+
+    return ElementTree(docRoot)
 
 
 def convertFromFile(path: str, _type: str, _useTag: bool) -> dict:
@@ -127,6 +125,8 @@ def convert2html(doc: ElementTree, _type: str, _service_id: str,  _useTag: bool)
     HTML_END_HTML = '>' 
     HTML_SPACE_TEXT = '$$HTML_space$$' 
     HTML_SPACE_HTML = ' '
+
+
 
 
 
@@ -296,6 +296,12 @@ def convert2html(doc: ElementTree, _type: str, _service_id: str,  _useTag: bool)
     font_red_START_HTML = "<font color = 'red'>"
     font_red_END_HTML = "</font>" 
 
+    CONVERT_mathjax = True
+    mathjax_START_TEXT = '\\('
+    mathjax_END_TEXT = '\\)'
+    mathjax_START_HTML = '<span class="ccctex" style>$$ {'
+    mathjax_END_HTML = '} $$</span>'
+
 
 
 
@@ -353,6 +359,10 @@ def convert2html(doc: ElementTree, _type: str, _service_id: str,  _useTag: bool)
                         pass
                     elif not current_type in [LIST_START_TEXT] and _useTag: 
                         text = '<span style="vertical-align: baseline;">'+text+'</span>'
+                    if CONVERT_mathjax:
+                        if _useTag:
+                            text = text.replace(mathjax_START_TEXT, mathjax_START_HTML)
+                            text = text.replace(mathjax_END_TEXT, mathjax_END_HTML)  
                     if CONVERT_TABLE:
                         if _useTag:
                             text = text.replace(TABLE_START_TEXT, TABLE_START_HTML)
@@ -632,6 +642,7 @@ def convert2html(doc: ElementTree, _type: str, _service_id: str,  _useTag: bool)
                     # output = output.replace(' ', '\ ')  # 빈칸
                     if _useTag: 
                         output = '<span class="ccctex " style="">$$  {'+output+'}  $$</span>'
+                
 
                 output = output.lstrip()
 
